@@ -1,0 +1,9 @@
+numpy==2.0.2
+pandas==2.2.3
+matplotlib==3.9.4
+scikit-learn==1.6.0
+scipy==1.14.1
+keras==3.7.0
+tensorflow
+streamlit==1.41.1
+pyeeg @ git+https://github.com/forrestbao/pyeeg.git@a6c18bb093e4748f9d9c208535a6ae024a0802b8
