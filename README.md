@@ -10,8 +10,6 @@ This repository contains the code and resources for an EEG-based emotion detecti
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [Results](#results)
-- [Contributors](#contributors)
-- [License](#license)
 
 ## Introduction
 
