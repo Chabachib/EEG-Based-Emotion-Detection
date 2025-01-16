@@ -1,39 +1,29 @@
-import numpy as np
-import pyeeg as pe
-import pickle as pickle
-import pandas as pd
 import math
 import keras
+import pickle
+import numpy as np
+import pyeeg as pe
+import pandas as pd
 import streamlit as st
-
-
 from sklearn import svm
-from sklearn.preprocessing import normalize
-from sklearn.preprocessing import StandardScaler
-
+from sklearn.preprocessing import normalize, StandardScaler
 from keras.api.models import load_model
-
 
 channels = [1, 2, 3, 4, 6, 11, 13, 17, 19, 20, 21, 25, 29, 31]
 band = [4, 8, 12, 16, 25, 45]
 window_size = 256
 step_size = 16
 sample_rate = 128
-subjectList = ["01", "02", "03", "04", "05", "06"]
-
 
 def load_cnn_model():
     return load_model("../models/cnn_model.h5")
 
-
 def normalize_standarize(data):
     return normalize(data)
-
 
 def std_scale(data):
     scaler = StandardScaler()
     return scaler.fit_transform(data)
-
 
 def FFT_Processing(data):
     meta = []
@@ -66,16 +56,12 @@ def map_emotion(arousal, valence):
 
 
 def make_prediction(trial, time_segment, data_segment):
+    
     model = load_cnn_model()
-
     fft_data = FFT_Processing(data_segment)
-
     X_norm = normalize(fft_data)
-
     X_scaled = std_scale(X_norm)
-
     X = X_scaled.reshape((X_scaled.shape[0], X_scaled.shape[1], 1))
-
     predictions = model.predict(X)
 
     arousal_prediction = "High" if predictions[0][0] > 0.5 else "Low"

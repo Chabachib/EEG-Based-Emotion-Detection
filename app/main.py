@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import numpy as np
 import time
 import matplotlib.pyplot as plt
@@ -6,14 +7,14 @@ from utils import *
 
 st.set_page_config(page_title="Real-Time EEG Emotion Detection", page_icon="🧠")
 st.title("Real-Time EEG Emotion Detection")
-st.write("Welcome to the Real-Time EEG Emotion Detection Simulator!")
+st.write("#### Welcome to the Real-Time EEG Emotion Detection Simulator!")
 st.write(
     """
-### What is This Simulation About?
-This simulation processes real-time EEG (Electroencephalography) data to analyze the emotional state of a person. 
-Using machine learning, we can predict emotions like happiness, sadness, or relaxation based on the brain's electrical activity.
+### What is this Simulation About?
+This simulation processes real-time EEG (ElectroEncephaloGraphy) data from the DEAP Dataset to analyze the emotional state of the participant. 
+Using machine and deep learning, we can predict emotions like happiness, sadness, or relaxation based on the brain's electrical activity.
 
-In this demo, you can:
+In this demostration, you can:
 - Select an EEG data file.
 - Simulate the real-time processing of EEG signals.
 - Visualize the EEG signal for multiple channels.
@@ -21,47 +22,59 @@ In this demo, you can:
 """
 )
 
-st.write("### Meet the Person Behind the EEG Data")
+st.sidebar.title("Credits")
+st.sidebar.write("- Nouh Taha CHEBCHOUB")
+st.sidebar.write("- Ayoub BENALI")
+st.sidebar.write("- Badr MOUAZEN")
+st.sidebar.write("- El Hassan ABDELWAHED")
+st.sidebar.write("- Giovanni de Marco")
+
+st.write("### Meet the participant behind the EEG data")
 video_placeholder = st.empty()
 
 st.write("### Select an EEG Data File:")
-file_options = [f"s{str(i).zfill(2)}.dat" for i in range(2, 7)]
+file_options = [f"s{str(i).zfill(2)}.dat" for i in range(1, 33)]
 selected_file = st.selectbox("Choose a file:", file_options)
 
-# Load video or image for visualization based on the selected file
 person_photo_path = f"media/{selected_file.replace('.dat', '.mp4')}"
 video_placeholder.video(person_photo_path)
 
-st.write("File loaded successfully. Starting simulation...")
+def list_music_files(folder_path):
+    try:
+        return [file for file in os.listdir(folder_path) if file.endswith('.mp3')]
+    except FileNotFoundError:
+        return []
 
-# Initialize statistics table
+# List available music files
+music_folder = "music"
+music_files = list_music_files(music_folder)
+
+st.write("### Listen to EEG-Associated Audio:")
+if music_files:
+    selected_audio = st.selectbox("Choose a music file:", music_files)
+    audio_file_path = f"{music_folder}/{selected_audio}"
+    st.audio(audio_file_path)
+else:
+    st.write("No audio files found in the 'music' folder.")
+
+st.write("File loaded successfully, you can start the simulation !")
+
 if "statistics" not in st.session_state:
     st.session_state.statistics = []
 
-# Simulate with media
 if st.button("Start Simulation"):
     file_path = f"../data_preprocessed_python/{selected_file}"
-    st.write(f"Reading file: {selected_file}")
-
     eeg_data = read_eeg_data(file_path)
 
     if eeg_data is not None:
-        # EEG data processing
         trial_count, channel_count, data_length = eeg_data.shape
-        st.write(
-            f"Data Shape: {trial_count} trials, {channel_count} channels, {data_length} data points"
-        )
-
-        plot_placeholder = st.empty()  # For accumulated signal
-        segment_plot_placeholder = st.empty()  # For 4-second sliding window
+        plot_placeholder = st.empty()
+        segment_plot_placeholder = st.empty()
         prediction_placeholder = st.empty()
         stats_placeholder = st.empty()
 
         for trial in range(trial_count):
-            st.write(f"Simulating Trial {trial + 1}...")
-
             for t in range(0, data_length, 64):
-                # Plot accumulated signals
                 fig, ax = plt.subplots(figsize=(15, 6))
 
                 for channel in channels:
@@ -78,10 +91,9 @@ if st.button("Start Simulation"):
 
                 plot_placeholder.pyplot(fig, clear_figure=True)
 
-                # Plot non-accumulated 4-second sliding window (updated every 0.5 seconds)
-                if t >= 512:  # Ensure we have at least 4 seconds of data
+                if t >= 512:
                     fig_segment, ax_segment = plt.subplots(figsize=(15, 6))
-                    start_idx = max(0, t - 512)  # 4 seconds = 512 data points (128 Hz * 4)
+                    start_idx = max(0, t - 512)
                     end_idx = t
 
                     for channel in channels:
@@ -98,14 +110,12 @@ if st.button("Start Simulation"):
 
                     segment_plot_placeholder.pyplot(fig_segment, clear_figure=True)
 
-                    # Make prediction and update statistics every 4 seconds
                     if t % (4 * 128) == 0:
                         time_segment = t // (4 * 128)
                         eeg_data_segment = eeg_data[trial, :, start_idx:end_idx]
                         prediction = make_prediction(trial, time_segment, eeg_data_segment)
                         prediction_placeholder.markdown(f"### **{prediction}**")
 
-                        # Update statistics table
                         st.session_state.statistics.append({
                             "Trial": trial + 1,
                             "Segment": time_segment + 1,
@@ -114,10 +124,9 @@ if st.button("Start Simulation"):
                             "Prediction": prediction
                         })
 
-                        # Display statistics table
                         stats_placeholder.table(st.session_state.statistics)
 
-                time.sleep(0.5)  # Update every 0.5 seconds
+                time.sleep(0.5)
 
             st.write(f"Trial {trial + 1} completed.")
 
